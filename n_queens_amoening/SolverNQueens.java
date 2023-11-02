@@ -59,8 +59,7 @@ public final class SolverNQueens {
 
     //function that creates initial board states, only affects global board. Only used for initialization and resets
     private static void initialSetup(int n){
-        //Add a safeguard for n > 3
-        //Perhaps wrap board and diag creates together?
+        globalN = n;
         globalBoard = createBoard(n);
         boardLdiag = createLDiag(globalN, globalBoard);
         boardRdiag = createRDiag(globalN, globalBoard);
@@ -73,7 +72,6 @@ public final class SolverNQueens {
         //an array is initialized with each index representing a row and each value representing a column
         //These together provide the coordinate position for each queen
         int [] board = new int[n];
-        globalN = n;
         //fill the array with column values
         for (int i = 0; i < n; i++){
             board[i] = i;
