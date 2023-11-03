@@ -17,23 +17,41 @@ public final class SolverNQueens {
     private static Random rnd = new Random();
     private static int [] boardLdiag;
     private static int [] boardRdiag;
+    private static int resetCounter;
+    private static int swapCounter;
+    private static int loopCounter;
+    private static int collisionCounter;
+    private static int boardCounter;
+    private static int lDiagCounter;
+    private static int rDiagCounter;
+    private static int doubleLoopCounter;
 
     public static void main (String [] args){
         //Runtime performed here
         Scanner scan = new Scanner (System.in);
         System.out.println("-------- N Queens Puzzle Solver --------");
+//Debug
         initialSetup(getInput(scan));
+        //initialSetup(4);
+        //globalBoard = new int [] {0, 1, 2, 3};
+        //boardLdiag = createLDiag(4,globalBoard);
+        //boardRdiag = createRDiag(4,globalBoard);
+//End debug
         System.out.println("Initial Values:" + Arrays.toString(globalBoard));
-        System.out.println("L Diag " + Arrays.toString(boardLdiag));
-        System.out.println("R Diag " + Arrays.toString(boardRdiag));
-        System.out.println("Number of Collisions: " + collisionReport(boardLdiag, boardRdiag) + "\nInitial Board:");
-        printBoard(globalBoard);
-        solve();
-        System.out.println("Final Values:" + Arrays.toString(globalBoard));
-        System.out.println("L Diag " + Arrays.toString(boardLdiag));
-        System.out.println("R Diag " + Arrays.toString(boardRdiag));
-        System.out.println("Number of Collisions: " + collisionReport(boardLdiag, boardRdiag) + "\nFinal Board:");
-        printBoard(globalBoard);
+        //System.out.println("L Diag " + Arrays.toString(boardLdiag));
+        //System.out.println("R Diag " + Arrays.toString(boardRdiag));
+        //System.out.println("Number of Collisions: " + collisionReport(boardLdiag, boardRdiag) + "\nInitial Board:");
+        //printBoard(globalBoard);
+        solveIterativeRepair();
+        //System.out.println("Final Values:" + Arrays.toString(globalBoard));
+        //System.out.println("L Diag " + Arrays.toString(boardLdiag));
+        //System.out.println("R Diag " + Arrays.toString(boardRdiag));
+        //System.out.println("Number of Collisions: " + collisionReport(boardLdiag, boardRdiag) + "\nFinal Board:");
+        //printBoard(globalBoard);
+        System.out.println("Counters: " + "\nBoard Counter: " + boardCounter + "\nlDiag Counter: " + lDiagCounter + 
+                "\nrDiag Counter: " + rDiagCounter + "\nSwap Counter: " + swapCounter + "\nLoop Counter: " + loopCounter +
+                "\nDouble Loop Counter: " + doubleLoopCounter + "\nCollision Counter: " + collisionCounter + 
+                "\nReset Counter: " + resetCounter);
     }
 
     public static int getInput(Scanner scan){
@@ -75,6 +93,7 @@ public final class SolverNQueens {
         //fill the array with column values
         for (int i = 0; i < n; i++){
             board[i] = i;
+            boardCounter++; //Used for empirical analysis
         }
         //Utilize Durstenfeld Shuffle to randomize initial board state
         int index;
@@ -84,6 +103,7 @@ public final class SolverNQueens {
             temp = board[i - 1];
             board[i - 1] = board[index];
             board[index] = temp;
+            boardCounter++; //Used for empirical analysis
         }
         return board;
         
@@ -93,12 +113,21 @@ public final class SolverNQueens {
     //Prints the input board representing empty spaces as '.' and filled spaces with 'Q'
     public static void printBoard(int [] board){
         char [] tempArray = new char[board.length];
-        Arrays.fill(tempArray, '.');
+        Arrays.fill(tempArray, 'n');
         for (int i = 0; i < board.length; i++){
             tempArray[board[i]] = 'Q';
             System.out.println(Arrays.toString(tempArray));
-            tempArray[board[i]] = '.';
+            tempArray[board[i]] = 'n';
         }
+    }
+
+    public static int calcLdiag(int [] board, int index){
+        //column position + (n-1) - row position
+        return board[index] + ((globalN - 1) - index);
+    }
+    public static int calcRdiag(int [] board, int index){
+        //column position +  row position
+        return board[index] + index;
     }
 
     //Create an array to represent the diagonal positions, one for rightward diags and one for leftward
@@ -106,63 +135,52 @@ public final class SolverNQueens {
     //Diagonal 0 starts at row n col 0 (bottom left)
     //Can be used for global board or any new objects
     public static int[] createLDiag(int n, int [] board){
-        int temp;
-        int diag;
+        int diagIndex;
         int [] lDiag = new int [2*n - 1];
         for (int i = 0; i < n; i++){
-            temp = board[i]; //get the column position of the queen
-            diag = temp + (n - 1 - i); //determine which diag it belongs to by adding the opposite end row number and column number (since 0 diag starts at bottom left)
-            lDiag[diag]++;
+            diagIndex = calcLdiag(board, i); //determine which diag it belongs to by adding the opposite end row number and column number (since 0 diag starts at bottom left)
+            lDiag[diagIndex]++;
+            lDiagCounter++; //Used for empirical analysis
         }
         return lDiag;
     }
     //Diagonal 0 starts at row 0 col 0 (top left)
     public static int[] createRDiag(int n, int [] board){
         int [] rDiag = new int [2*n - 1];
-        int temp;
-        int diag;
+        int diagIndex;
         for (int i = 0; i < n; i++){
-            temp = board[i]; //get the column position of the queen
-            diag = temp + i; //determine which diag it belongs to by adding row number and column number (0 diag starts at top left)
-            rDiag[diag]++;
+            diagIndex = calcRdiag(board, i); //determine which diag it belongs to by adding row number and column number (0 diag starts at top left)
+            rDiag[diagIndex]++;
+            rDiagCounter++; //Used for empirical analysis
         }
         return rDiag;
     }
     
+    
 
     //Calculates the number of collisions using two diagonal arrays as an input
     public static int collisionReport(int [] lDiagArr, int [] rDiagArr){
-        return lCollide(lDiagArr) + rCollide(rDiagArr);
-    }
-
-    //sub functions to calculate the left and right diagonal collisions independently
-    private static int lCollide(int [] lDiagArr){
         int lSum = 0;
+        int rSum = 0;
+        //loops through each value and calculates number of queens - 1 for all diagonals containing more than 1 queen
+        //in order to calculate number of collisions. Stores that value and continues.
         for (int i = 0; i < 2*globalN - 1; i++){
             if(lDiagArr[i] > 1){
                 lSum = lSum + lDiagArr[i] - 1;
-            }
-        }
-        return lSum;
-    }
-    private static int rCollide(int [] rDiagArr){
-        int rSum = 0;
-        for (int i = 0; i < 2*globalN - 1; i++){ //checks for a diagonal with more than 1 queen and counts the number of conflicts
-            if(rDiagArr[i] > 1){
                 rSum = rSum + rDiagArr[i] - 1;
             }
         }
-        return rSum;
+        return lSum + rSum;
     }
     
-    //checks if a given queen at index has diagonal collisions along ldiags and rdiags for board
+    //checks if a given queen at index has diagonal collisions along global ldiags and rdiags for global board
     //Utilizes the board and diagonals the queen is on, as well as the board row index of the given queen
-    public static int diagCollisions(int [] board, int index, int [] lDiags, int [] rDiags){
-        int lDiaInd = board[index] + ((globalN - 1) - index); //calculates the left diagonal index of the queen
-        int rDiaInd = board[index] + index; //calculates the right diagonal index of the queen
-        int lCol = lDiags[lDiaInd] - 1; //Uses those indicies to find the number of collisions in each diagonal direction
-        int rCol = rDiags[rDiaInd] - 1; 
-        return lCol + rCol;
+    public static int diagCollisions(int index){
+        int lDiaIndex = calcLdiag(globalBoard, index); //calculates the left diagonal index of the queen
+        int rDiaIndex = calcRdiag(globalBoard, index); //calculates the right diagonal index of the queen
+        int lCollisions = boardLdiag[lDiaIndex] - 1; //Uses those indicies to find the number of collisions in each diagonal direction
+        int rCollisions = boardRdiag[rDiaIndex] - 1; 
+        return lCollisions + rCollisions;
     }
 
     //swaps the queen in row i with the queen in row j
@@ -173,44 +191,66 @@ public final class SolverNQueens {
         board[j] = temp1;
         return board;
     }
+    //move diagonal values to update new queen positions
+    public static int [] swapLdiag(int [] lDiag, int [] tempBoard, int i, int j){
+        lDiag[calcLdiag(globalBoard, i)]--; //decrement current diagonal position of i and j
+        lDiag[calcLdiag(globalBoard, j)]--;
+        lDiag[calcLdiag(tempBoard, i)]++; //increment swapped diagonal position of i and j
+        lDiag[calcLdiag(tempBoard, j)]++;
+        return lDiag;
+    }
+    public static int [] swapRdiag(int [] rDiag, int [] tempBoard, int i, int j){
+        rDiag[calcRdiag(globalBoard, i)]--; //decrement current diagonal position of i and j
+        rDiag[calcRdiag(globalBoard, j)]--;
+        rDiag[calcRdiag(tempBoard, i)]++; //increment swapped diagonal position of i and j
+        rDiag[calcRdiag(tempBoard, j)]++;
+        return rDiag;
+    }
 
 
 //if/when it gets stuck on a local minimum, can simply reset the board and rerun. If that is the method, need to acknowledge in the 
 //analysis that the worst case could potentially run infinitely since there would be the possibility of it generating the same
 //board over and over and running into the same conflicting point. Also, don't forget to include information about the average case
     
-    //solves the board by checking each queen with the ones past it, and determining if there would be less collisions from swapping the two
+    //solves the board using iterative repair method
     //If it gets stuck with no more possible moves but still has collisions, resets the board and recursively solves the new board
-    public static void solve(){
-        if (collisionReport(boardLdiag, boardRdiag) != 0){ //ensure that solve needs to occur
+    public static void solveIterativeRepair(){
+        if (collisionReport(boardLdiag, boardRdiag) != 0){ //ensure that solver needs to run
             int swapPerformed;
             int diagColi;
             int diagColj;
             int afterSwap;
             int beforeSwap;
             int [] temp;
-            int [] tempLdia;
-            int [] tempRdia;
+            int [] tempLdiag;
+            int [] tempRdiag;
+            //Do while loop ensures all possible collision minimization moves have been performed
+            //continues looping until double for loop cannot perform any more swaps
             do {
                 swapPerformed = 0;
                 for(int i = 0; i < globalN - 1; i++){  //iterates through every row and for every row, checks it against the subsequent rows
+                    loopCounter++; //Used for empirical analysis
                     for(int j = i + 1; j < globalN; j++){ //Prevents any duplicate checks
-                        diagColi = diagCollisions(globalBoard, i, boardLdiag, boardRdiag);
-                        diagColj = diagCollisions(globalBoard, j, boardLdiag, boardRdiag);
+                        diagColi = diagCollisions(i);
+                        diagColj = diagCollisions(j);
+                        doubleLoopCounter++; //Used for empirical analysis
                         if (diagColi != 0 || diagColj != 0){ //checks that at least one of the queens has a collision worth resolving
                             temp = globalBoard.clone(); //ensure temp doesn't diverge from board
+                            tempLdiag = boardLdiag.clone();
+                            tempRdiag = boardRdiag.clone();
                             temp = swap(temp, i, j); //creates a temporary board to perform the swap and evaluate
                             //only really need to check the diagonals and indicies affeceted by i and j swap
-                            tempLdia = createLDiag(globalN, temp);
-                            tempRdia = createRDiag(globalN, temp);
-                            afterSwap = collisionReport(tempLdia, tempRdia);
+                            tempLdiag = swapLdiag(tempLdiag, temp, i, j);
+                            tempRdiag = swapRdiag(tempRdiag, temp, i, j);
+                            afterSwap = collisionReport(tempLdiag, tempRdiag);
                             beforeSwap = collisionReport(boardLdiag, boardRdiag);
+                            collisionCounter++; //Used for empirical analysis
                             if (afterSwap < beforeSwap){  //if the swapped temp board is better, assign it to board
                                 globalBoard = temp.clone(); //perform swap on board
-                                boardLdiag = tempLdia.clone();  //update the diagonals
-                                boardRdiag = tempRdia.clone();
+                                boardLdiag = tempLdiag.clone();  //update the diagonals
+                                boardRdiag = tempRdiag.clone();
                                 swapPerformed++;  //record swap count
-                                break;
+                                swapCounter++; //Used for empirical analysis
                             }
                         }
 
@@ -218,13 +258,13 @@ public final class SolverNQueens {
                 }
             } while (swapPerformed != 0);  //if no swaps have been performed, then there are no more possible moves and the loop ends
             if(collisionReport(boardLdiag, boardRdiag) > 0){ //checks that there are no remaining collisions
-                System.out.println("Board Resetting...");
+                //System.out.println("Current Board");
+                //printBoard(globalBoard);
+                //System.out.println("Board Resetting...");
                 initialSetup(globalN); //if there are collisions, resets the board and solves again
-                solve();
+                solveIterativeRepair();
+                resetCounter++; //Used for empirical analysis
             }
-            //Gets stuck with 1 collision occasionally since there are no moves it can perform for the given setup to solve it
-            //But its also not capable of "backtracking" to fix the mistakes preventing it from solving
-        }
-        
+        }   
     }
 }
