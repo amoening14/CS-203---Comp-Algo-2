@@ -21,9 +21,6 @@ public final class SolverNQueens {
     private static int swapCounter;
     private static int loopCounter;
     private static int collisionCounter;
-    private static int boardCounter;
-    private static int lDiagCounter;
-    private static int rDiagCounter;
     private static int doubleLoopCounter;
 
     public static void main (String [] args){
@@ -75,38 +72,34 @@ public final class SolverNQueens {
         return temp;
     }
 
-    //function that creates initial board states, only affects global board. Only used for initialization and resets
+    //Creates an array of n length to represent the board, represented globally
+    //board size must be greater than 3
     private static void initialSetup(int n){
         globalN = n;
-        globalBoard = createBoard(n);
-        boardLdiag = createLDiag(globalN, globalBoard);
-        boardRdiag = createRDiag(globalN, globalBoard);
-    }
-
-    //Creates an array of n length to represent the board. Can be used for global board or any new objects
-    //board size must be greater than 3
-    public static int [] createBoard(int n){
-        //Since there can only be one queen per row and column, 
-        //an array is initialized with each index representing a row and each value representing a column
-        //These together provide the coordinate position for each queen
-        int [] board = new int[n];
+        globalBoard = new int[n];
         //fill the array with column values
         for (int i = 0; i < n; i++){
-            board[i] = i;
-            boardCounter++; //Used for empirical analysis
+            globalBoard[i] = i;
         }
         //Utilize Durstenfeld Shuffle to randomize initial board state
         int index;
         int temp;
         for (int i = n; i > 1; i--){
             index = rnd.nextInt(i);
-            temp = board[i - 1];
-            board[i - 1] = board[index];
-            board[index] = temp;
-            boardCounter++; //Used for empirical analysis
+            temp = globalBoard[i - 1];
+            globalBoard[i - 1] = globalBoard[index];
+            globalBoard[index] = temp;
         }
-        return board;
-        
+
+        //Initialize diagonal boards 
+        boardLdiag = new int [2*n - 1];
+        boardRdiag =  new int [2*n - 1];
+
+        //fill diagonal boards with num queens for each diagonal
+        for (int i = 0; i < n; i++){
+            boardLdiag[calcLdiag(globalBoard, i)]++;
+            boardRdiag[calcRdiag(globalBoard, i)]++;
+        }
         
     }
 
@@ -129,35 +122,7 @@ public final class SolverNQueens {
         //column position +  row position
         return board[index] + index;
     }
-
-    //Create an array to represent the diagonal positions, one for rightward diags and one for leftward
-    //each diagonal is represented by the corresponding index, labeled 0 - (2n - 1)
-    //Diagonal 0 starts at row n col 0 (bottom left)
-    //Can be used for global board or any new objects
-    public static int[] createLDiag(int n, int [] board){
-        int diagIndex;
-        int [] lDiag = new int [2*n - 1];
-        for (int i = 0; i < n; i++){
-            diagIndex = calcLdiag(board, i); //determine which diag it belongs to by adding the opposite end row number and column number (since 0 diag starts at bottom left)
-            lDiag[diagIndex]++;
-            lDiagCounter++; //Used for empirical analysis
-        }
-        return lDiag;
-    }
-    //Diagonal 0 starts at row 0 col 0 (top left)
-    public static int[] createRDiag(int n, int [] board){
-        int [] rDiag = new int [2*n - 1];
-        int diagIndex;
-        for (int i = 0; i < n; i++){
-            diagIndex = calcRdiag(board, i); //determine which diag it belongs to by adding row number and column number (0 diag starts at top left)
-            rDiag[diagIndex]++;
-            rDiagCounter++; //Used for empirical analysis
-        }
-        return rDiag;
-    }
     
-    
-
     //Calculates the number of collisions using two diagonal arrays as an input
     public static int collisionReport(int [] lDiagArr, int [] rDiagArr){
         int lSum = 0;
@@ -167,6 +132,7 @@ public final class SolverNQueens {
         for (int i = 0; i < 2*globalN - 1; i++){
             if(lDiagArr[i] > 1){
                 lSum = lSum + lDiagArr[i] - 1;
+            } else if (rDiagArr[i] > 1){
                 rSum = rSum + rDiagArr[i] - 1;
             }
         }
