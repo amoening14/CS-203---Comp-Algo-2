@@ -30,9 +30,9 @@ public final class SolverNQueens {
 //Debug
         initialSetup(getInput(scan));
         //initialSetup(6);
-        //globalBoard = new int [] {3, 1, 2, 5, 0, 4};
-        //boardLdiag = createLDiag(6,globalBoard);
-        //boardRdiag = createRDiag(6,globalBoard);
+        //globalBoard = new int [] {2, 5, 3, 4, 0, 1};
+        //boardLdiag = new int [] {0, 2, 0, 0, 0, 0, 2, 1, 0, 1, 0};
+        //boardRdiag = new int [] {0, 0, 1, 0, 1, 1, 2, 1, 0, 0, 0};
 //End debug
         System.out.println("Initial Values:" + Arrays.toString(globalBoard));
         System.out.println("L Diag " + Arrays.toString(boardLdiag));
@@ -131,7 +131,8 @@ public final class SolverNQueens {
         for (int i = 0; i < 2*globalN - 1; i++){
             if(lDiagArr[i] > 1){
                 lSum += lDiagArr[i] - 1;
-            } else if (rDiagArr[i] > 1){
+            }
+            if (rDiagArr[i] > 1){
                 rSum += (rDiagArr[i] - 1);
             }
         }
@@ -217,12 +218,6 @@ public final class SolverNQueens {
                                 boardLdiag = tempLdiag.clone();
                                 boardRdiag = tempRdiag.clone();
                                 swapPerformed++;  //record swap count
-
-                                //System.out.println();
-                                //System.out.println("Current Values:" + Arrays.toString(globalBoard));
-                                //printBoard(globalBoard);
-                                //System.out.println();
-
                                 swapCounter++; //Used for empirical analysis
                             }
                         }
@@ -231,13 +226,13 @@ public final class SolverNQueens {
                 }
                 //checks that all possible moves have been performed, and resets the board and repeats if collisions still exist,
                 //or exits while loop if no more collisions
+                //If no swaps can be performed and collisions still exist, resets board and repeats solver
                 if(collisionReport(boardLdiag, boardRdiag) > 0 && swapPerformed == 0){
-                //System.out.println("Current Board");
-                //printBoard(globalBoard);
-                //System.out.println("Board Resetting...");
                     initialSetup(globalN);
+                    System.out.println("Resetting...");
                     resetCounter++; //Used for empirical analysis
-                } else if (collisionReport(boardLdiag, boardRdiag) == 0 &&swapPerformed == 0){
+                //If no collisions exist, exits loop
+                } else if (collisionReport(boardLdiag, boardRdiag) == 0){
                     repeat = false;
                 } //else repeat to perform all possible moves for the current board permutation
             } while (repeat);  //if no swaps have been performed, then there are no more possible moves and the loop ends
