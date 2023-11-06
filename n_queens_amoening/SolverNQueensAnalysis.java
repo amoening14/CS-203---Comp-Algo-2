@@ -11,45 +11,35 @@ import java.util.InputMismatchException;
 import java.util.Random;
 import java.util.Scanner;
 
-public final class SolverNQueens {
+public final class SolverNQueensAnalysis {
     private static int [] globalBoard;
     private static int globalN;  //assigned value when board is created, used for all other creation methods
     private static Random rnd = new Random();
     private static int [] boardLdiag;
     private static int [] boardRdiag;
-    //private static int resetCounter; //optional counters
-    //private static int swapCounter;
-    //private static int loopCounter;
-    //private static int collisionCounter;
-    //private static int doubleLoopCounter;
 
     public static void main (String [] args){
         //Runtime performed here
         Scanner scan = new Scanner (System.in);
         System.out.println("-------- N Queens Puzzle Solver --------");
-        initialSetup(getInput(scan));
-/*Debug
-        //initialSetup(4);
-        //globalBoard = new int [] {0,1,2,3};
-        //boardLdiag = new int [] {0, 0, 0, 4, 0, 0, 0};
-        //boardRdiag = new int [] {1, 0, 1, 0, 1, 0, 1};
-End debug*/
-        //System.out.println("Initial Values:" + Arrays.toString(globalBoard)); //Can be used for visual outputs
-        //System.out.println("L Diag " + Arrays.toString(boardLdiag));
-        //System.out.println("R Diag " + Arrays.toString(boardRdiag));
-        System.out.println("Number of Collisions: " + collisionReport(boardLdiag, boardRdiag) + "\nInitial Board:");
-        printBoard(globalBoard);
-        solveIterativeRepair();
-        //System.out.println("Final Values:" + Arrays.toString(globalBoard));
-        //System.out.println("L Diag " + Arrays.toString(boardLdiag));
-        //System.out.println("R Diag " + Arrays.toString(boardRdiag));
-        System.out.println("Number of Collisions: " + collisionReport(boardLdiag, boardRdiag) + "\nFinal Board:");
-        printBoard(globalBoard);
-        /*System.out.println("Counters: "  + "\nLoop i Performed: " + loopCounter +
-                "\nLoop j Performed: " + doubleLoopCounter + "\nSwaps Performed: " + swapCounter 
-                + "\nSwap Checks: " + collisionCounter + 
-                "\nBoard Resets: " + resetCounter); //if counters desired
-        */
+        analysis();
+    }
+
+    public static void analysis(){
+        int [] n = new int [] {4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 5000, 10000};
+        for(int i = 0; i < n.length; i++){
+            initialSetup(n[i]);
+            long start = System.nanoTime();
+            try{
+                System.out.println(n[i]);
+                solveIterativeRepair();
+            }
+            catch (Exception e){
+                System.out.println(e +" Wrong!");
+            }
+            long end = System.nanoTime();
+            System.out.println("Miliseconds: " + (end - start) * 1e-6);
+        }
     }
 
     public static int getInput(Scanner scan){
@@ -202,12 +192,10 @@ End debug*/
 
                 //iterates through every row and for every row, checks it against the subsequent rows
                 for(int i = 0; i < globalN - 1; i++){  
-                    //loopCounter++;
                    
                     for(int j = i + 1; j < globalN; j++){ 
                         diagColi = diagCollisions(i);
                         diagColj = diagCollisions(j);
-                        //doubleLoopCounter++; //counter
                         if (diagColi != 0 || diagColj != 0){ //checks that at least one of the queens has a collision worth resolving
                             //create temporary values used to evaluate swap
                             temp = globalBoard.clone();
@@ -218,13 +206,11 @@ End debug*/
                             tempRdiag = swapRdiag(tempRdiag, temp, i, j);
                             afterSwap = collisionReport(tempLdiag, tempRdiag);
                             beforeSwap = collisionReport(boardLdiag, boardRdiag);
-                            //collisionCounter++; //counter
                             if (afterSwap < beforeSwap){  //if the swapped temp board is better, assign it to board
                                 globalBoard = temp.clone(); //perform swap on board and diagonals
                                 boardLdiag = tempLdiag.clone();
                                 boardRdiag = tempRdiag.clone();
                                 swapPerformed++;  //record swap count
-                                //swapCounter++; //counter
                             }
                         }
                     }
@@ -234,7 +220,6 @@ End debug*/
                 //If no swaps can be performed and collisions still exist, resets board and repeats solver
                 if(collisionReport(boardLdiag, boardRdiag) > 0 && swapPerformed == 0){
                     initialSetup(globalN);
-                    //resetCounter++; //counter
                 //If no collisions exist, exits loop
                 } else if (collisionReport(boardLdiag, boardRdiag) == 0){
                     repeat = false;
