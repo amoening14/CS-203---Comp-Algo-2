@@ -6,7 +6,7 @@
 // Kettering University
 // 2022-03-29
 
-package Algorithms.DivideAndConquer;
+package closestPair2D;
 
 // "Static" class including some simple algorithms to sort.
 public final class Sorting {
@@ -54,22 +54,6 @@ public final class Sorting {
          MergeSortedArrays( B, C, A );
       }
    }
-   
-   // Desc.: Quicksort algorithm (divide-by-2, recursive, top-down) to sort input subarray (non-decreasing).
-   // Input: An array of integers (A), leftmost index of input subarray (left), and rightmost index of input subarray (right).
-   // Note: Recursive implementation.
-   public static void Quicksort( int[] A, int left, int right ) {
-      // ...
-      if( left < right ) {
-         // Array partitioning (any partitioning algorithm can be used here).
-         // Note: if partitioning does not return pivot index (e.g. Hoare), recursive calls must be adjusted!
-         int pivotIndex = Algorithms.DecreaseAndConquer.Partitioning.LomutoPartitioning(A, left, right);
-         // Recursive application of Quicksort to left-part and right-part in respect to pivot.
-         Quicksort( A, left, pivotIndex-1 );
-         Quicksort( A, pivotIndex+1, right );
-      }
-   }
-
 }
 
 
