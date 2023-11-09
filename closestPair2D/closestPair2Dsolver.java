@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
+import closestPair2D.Sorting;
 
 import javax.naming.LimitExceededException;
 
@@ -25,9 +26,17 @@ public final class closestPair2Dsolver {
         System.out.println("Please enter Number of Points:");
         point [] pGen = generatePoints(scan.nextInt(), 100, 100);
         printList(pGen);
-        System.out.println("From File");
-        point [] pFile = readFile("closestPair2D/CSVDemo.csv");
-        printList(pFile);
+        //System.out.println("From File");
+        //point [] pFile = readFile("closestPair2D/CSVDemo.csv");
+        //printList(pFile);
+        point [] pX = pGen.clone();
+        point [] pY = pGen.clone();
+        Sorting.mergeSortX(pX);
+        Sorting.mergeSortY(pY);
+        System.out.println("Sorted by x");
+        printList(pX);
+        System.out.println("Sorted by y");
+        printList(pY);
     }
 
     /*
