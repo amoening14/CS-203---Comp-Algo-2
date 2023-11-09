@@ -8,14 +8,13 @@ package closestPair2D;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
+
+import javax.naming.LimitExceededException;
 
 public final class closestPair2Dsolver {
     private static Random rnd = new Random();
@@ -24,12 +23,11 @@ public final class closestPair2Dsolver {
         Scanner scan = new Scanner (System.in);
         System.out.println("-------- Closest Pair Problem Solver --------");
         System.out.println("Please enter Number of Points:");
-        //point [] P = generatePoints(scan.nextInt(), 100, 100);
-        //printList(P);
+        point [] pGen = generatePoints(scan.nextInt(), 100, 100);
+        printList(pGen);
         System.out.println("From File");
-        String filepath = "closestPair2D/CSVDemo.csv";
-        point [] p = readFile(filepath);
-        writePoints(p , "closestPair2D/CSVDemoOut.csv");
+        point [] pFile = readFile("closestPair2D/CSVDemo.csv");
+        printList(pFile);
     }
 
     /*
@@ -58,33 +56,48 @@ public final class closestPair2Dsolver {
 
     //Generates integer coordinates bou
     public static point[] generatePoints(int n, int Xmax, int Ymax){
-        if (n > Xmax * Ymax) {
-            throw new IllegalArgumentException("Number of points cannot exceed the area of the grid");
-        }
-        ArrayList<point> pointList = new ArrayList<>();
+        try{
+            if (n > Xmax * Ymax) {
+                throw new IllegalArgumentException("Number of points cannot exceed the area of the grid");
+            } else if  (n < 2) {
+                throw new LimitExceededException("Number of Points must be at least 2");
+            }
+            ArrayList<point> pointList = new ArrayList<>();
 
-        boolean duplicate = false;
-        for(int i = 0; i < n; i++){
-            int x = rnd.nextInt(Xmax);
-            int y = rnd.nextInt(Ymax);
-            for(point p : pointList){
-                if (p.x == x && p.y == y){
-                    duplicate = true;
-                    break;
+            boolean duplicate = false;
+            for(int i = 0; i < n; i++){
+                int x = rnd.nextInt(Xmax);
+                int y = rnd.nextInt(Ymax);
+                for(point p : pointList){
+                    if (p.x == x && p.y == y){
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if(!duplicate){
+                    pointList.add(new point(x,y));
+                } else {
+                    i--;
                 }
             }
-            if(!duplicate){
-                pointList.add(new point(x,y));
-            } else {
-                i--;
-            }
+            point [] p = pointList.toArray(new point[0]);
+            writePoints(p , "closestPair2D/CSVDemoOut.csv");
+            return p;
+        } catch (IllegalArgumentException iae) {
+            System.out.println(iae.getMessage());
+        } catch (LimitExceededException lee) {
+            System.out.println(lee.getMessage());
         }
-        return pointList.toArray(new point[0]);
+        return new point [0];
+        
     }
 
     public static void writePoints(point [] pointList, String filepath){
         try (PrintWriter pw = new PrintWriter(new File(filepath))){
             StringBuilder line = new StringBuilder();
+            if(pointList.length < 1){
+                throw new NullPointerException("point list is empty");
+            }
             for (int i = 0; i < pointList.length; i++) {
                 line.append(pointList[i].toStringNum());
                 if (i != pointList.length - 1) {
@@ -93,17 +106,11 @@ public final class closestPair2Dsolver {
             }
             pw.write(line.toString());
         } catch (NullPointerException npe){
-            npe.printStackTrace();
+            System.out.println("Write to csv failed, " + npe.getMessage());
         } catch (IOException ioe){
             ioe.printStackTrace(); 
         }
         
-    }
-
-    public static void printList(point [] p){
-        for(int i = 0; i < p.length; i++){
-            System.out.println(p[i].toString());
-        }
     }
 
     public static point[] readFile(String filepath){
@@ -122,7 +129,6 @@ public final class closestPair2Dsolver {
                 if (values.length == 2) {
                     xString = values[0];
                     yString = values[1];
-                    System.out.println(xString + "," + yString);
                     x = Integer.parseInt(xString);
                     y = Integer.parseInt(yString);
                     p.add(new point(x, y));
@@ -134,7 +140,17 @@ public final class closestPair2Dsolver {
             return p.toArray(new point[0]);
         }catch (FileNotFoundException fnfe) {
             System.out.println("File Not Found");
-            return null;
+            return new point [0];
+        }
+    }
+
+    public static void printList(point [] p){
+        try {
+            for(int i = 0; i < p.length; i++){
+                System.out.println(p[i].toString());
+            }
+        } catch (NullPointerException npe){
+            System.out.println("Print failed, " + npe.getMessage());
         }
     }
 }
